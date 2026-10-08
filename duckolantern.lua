@@ -2,11 +2,13 @@ local p = game:GetService("Players").LocalPlayer
 local TS = game:GetService("TeleportService")
 local RS = game:GetService("ReplicatedStorage")
 local BS = game:GetService("BadgeService")
+local MS = game:GetService("MarketplaceService")
 local SG = game:GetService("StarterGui")
 
 local MainId = 91329411318364
 local DuckId = 87313531273173
 local BadgeId = 4427482880414316
+local ItemId = 126884250250747
 
 local function N(a,b)
     pcall(function()
@@ -21,6 +23,31 @@ end
 local function E(a)
     warn("[DuckQuest] " .. a)
     N(a,true)
+end
+
+local function CheckOwned()
+    local badge
+    local item
+
+    local ok1,err1 = pcall(function()
+        badge = BS:UserHasBadgeAsync(p.UserId,BadgeId)
+    end)
+
+    if not ok1 then
+        E("Badge check failed: " .. tostring(err1))
+        return nil
+    end
+
+    local ok2,err2 = pcall(function()
+        item = MS:PlayerOwnsAsset(p,ItemId)
+    end)
+
+    if not ok2 then
+        E("Item check failed: " .. tostring(err2))
+        return nil
+    end
+
+    return badge,item
 end
 
 if game.PlaceId == MainId then
@@ -56,6 +83,15 @@ if game.PlaceId == MainId then
 
     task.wait(1)
 
+    local badge,item = CheckOwned()
+
+    if badge == true or item == true then
+        N("Duck reward already owned!")
+        task.wait(2)
+        p:Kick("Done")
+        return
+    end
+
     if q.Text:find("Claim your Duck O Lantern in the Avatar Shop",1,true) then
         N("Claiming Duck O Lantern...")
 
@@ -68,9 +104,20 @@ if game.PlaceId == MainId then
             return
         end
 
-        N("Duck O Lantern claimed!")
-        task.wait(2)
-        p:Kick("Done")
+        task.wait(3)
+
+        N("Checking reward...")
+
+        badge,item = CheckOwned()
+
+        if badge == true or item == true then
+            N("Duck reward claimed!")
+            task.wait(2)
+            p:Kick("Done")
+            return
+        end
+
+        E("Reward not found in account")
         return
     end
 
@@ -192,27 +239,20 @@ if game.PlaceId == DuckId then
             end
 
             if m >= 30 and g >= 10 then
-                N("Progress complete, checking badge...")
+                N("Progress complete, checking rewards...")
 
-                local claimed = false
+                local badge,item = CheckOwned()
 
-                local ok2,err2 = pcall(function()
-                    claimed = BS:UserHasBadgeAsync(p.UserId,BadgeId)
-                end)
-
-                if not ok2 then
-                    E("Badge check failed: " .. tostring(err2))
-                    return
-                end
-
-                if claimed then
-                    N("Badge found, returning...")
+                if badge == true or item == true then
+                    N("Reward found, returning...")
                     task.wait(1)
                     TS:Teleport(MainId,p)
                     return
                 end
 
-                N("Badge not found, waiting for claim...")
+                if badge == false and item == false then
+                    N("Badge and Duck-o-Lantern not found, waiting...")
+                end
             end
         end)
 
