@@ -6,7 +6,7 @@ local SG = game:GetService("StarterGui")
 
 local MainId = 91329411318364
 local DuckId = 87313531273173
-local BadgeId = 2705464591702054
+local BadgeId = 4427482880414316
 
 local function N(a,b)
     pcall(function()
