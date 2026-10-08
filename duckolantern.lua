@@ -37,6 +37,7 @@ if game.PlaceId == MainId then
     local K = RS.Packages._Index["sleitnick_knit@1.7.0"].knit.Services
     local R = K.ProgressionEventService.RF.FireEvent
     local C = K.QuestService.RF.CompleteObjective
+    local H = K.HalloweenService.RF.ClaimDuckHead
 
     if not R then
         E("FireEvent not found")
@@ -48,56 +49,26 @@ if game.PlaceId == MainId then
         return
     end
 
+    if not H then
+        E("ClaimDuckHead not found")
+        return
+    end
+
     task.wait(1)
 
     if q.Text:find("Claim your Duck O Lantern in the Avatar Shop",1,true) then
         N("Claiming Duck O Lantern...")
 
-        local a = workspace:FindFirstChild("AvatarStore")
-        a = a and a:FindFirstChild("Pedestals")
+        local ok,err = pcall(function()
+            H:InvokeServer()
+        end)
 
-        if not a then
-            E("AvatarStore.Pedestals not found")
+        if not ok then
+            E("ClaimDuckHead failed: " .. tostring(err))
             return
         end
 
-        local found = false
-
-        for _, v in ipairs(a:GetChildren()) do
-            local h = v:FindFirstChild("PromptHolder")
-            local r = h and h:FindFirstChild("DuckHeadPrompt")
-
-            if r and r:IsA("ProximityPrompt") then
-                found = true
-
-                local c = p.Character
-
-                if not c then
-                    E("Character not found")
-                    return
-                end
-
-                c:PivotTo(h.CFrame)
-                task.wait(0.5)
-
-                local ok,err = pcall(function()
-                    fireproximityprompt(r)
-                end)
-
-                if not ok then
-                    E("Fire DuckHeadPrompt failed: " .. tostring(err))
-                end
-
-                task.wait(1)
-            end
-        end
-
-        if not found then
-            E("DuckHeadPrompt not found")
-            return
-        end
-
-        N("Completed!")
+        N("Duck O Lantern claimed!")
         task.wait(2)
         p:Kick("Done")
         return
